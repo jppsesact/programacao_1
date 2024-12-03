@@ -156,7 +156,7 @@ class  Game {
     }
     if (numHitWall == numHitWallMax){
       increaseYCoordEnemies();
-      hitWall=0;  
+      numHitWall=0;  
     }
   }
 

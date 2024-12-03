@@ -8,7 +8,7 @@ class Asset {
   int _width;
   int _height;
   color _color;
-
+  float speed;
   Asset(float x, float y, color _color) {
     this.x = x;
     this.y = y;
@@ -25,7 +25,7 @@ class Player extends Asset {
     super._height = 20;
   }
 
-  void Draw() {
+  void draw() {
     if (enable) {
       fill(_color);
       rect(x, height - _width, _width, _height);
@@ -35,17 +35,23 @@ class Player extends Asset {
 
 class Enemy extends Asset {
 
+
   Enemy(int x, int y, color _color) {
     super(x, y, _color);
     _width  = 30;
     _height = 20;
+    speed = 1;
   }
 
-  void Draw() {
+  void draw() {
     if (enable) {
       fill(_color);
-      rect(x, y, _width, _height);
+      rect(x, y, _width, _height);    
     }
+  }
+
+  void move() {    
+      this.x += enemyDirection * speed;    
   }
 }
 
@@ -96,10 +102,16 @@ class  Game {
   Enemy[][] enemies;
   ArrayList<Bullet> bullets;
   Player player;
+  int enemyWidth = 30;
+  int enemyHeight = 20;
 
   float cooldownTime = 500; // Cooldown time in milliseconds
   float lastShotTime = 0; // Time of the last shot
-
+  private int numHitWall=0;
+  
+  private final int enemySpeedY = 20;
+  private final int numHitWallMax = 2;
+  
   private Game() {
     enemies = new Enemy[5][5];
     bullets = new ArrayList<Bullet>();
@@ -110,19 +122,53 @@ class  Game {
     this.score = score;
   }
 
-  void DrawPlayer() {
-    player.Draw();
+  void drawPlayer() {
+    player.draw();
   }
 
-  void DrawEnemies() {
+
+  void createEnemies() {
+    // Inicializa os inimigos
+    for (int i = 0; i < game.enemies.length; i++) {
+      for (int j = 0; j < game.enemies[i].length; j++) {
+        Enemy enemy = new Enemy(j * (enemyWidth + 10) + 30, i * (enemyHeight + 10) + 30, #FC0303);
+        game.enemies[i][j] = enemy;
+      }
+    }
+  }
+  
+  void drawEnemies() {
+    enemyHitWall();
     for (int i = 0; i < enemies.length; i++) {
       for (int j = 0; j < enemies[i].length; j++) {
-        enemies[i][j].Draw();
+        enemies[i][j].draw();
+        enemies[i][j].move();
       }
     }
   }
 
-  void DrawBullets() {
+  void enemyHitWall() {
+    int row = enemies.length-1;
+    int col = enemies[row].length-1;
+    if (enemies[0][0].x <= 0 || enemies[row][col].x + enemyWidth> width) {
+      enemyDirection *= -1;
+      numHitWall++;
+    }
+    if (numHitWall == numHitWallMax){
+      increaseYCoordEnemies();
+      hitWall=0;  
+    }
+  }
+
+  void increaseYCoordEnemies() {
+    for (int i = 0; i < game.enemies.length; i++) {
+      for (int j = 0; j < game.enemies[i].length; j++) {
+        game.enemies[i][j].y += enemySpeedY;
+     }
+    }
+  }
+
+  void drawBullets() {
     for (int i = 0; i < bullets.size(); i++) {
       Bullet bullet = bullets.get(i);
       if (bullet.enable) {
@@ -132,8 +178,8 @@ class  Game {
     }
   }
 
-  void Shoot() {
-    if (bullets.size() <=5 && this.CoolDownShoot()) {
+  void shoot() {
+    if (bullets.size() <=5 && this.coolDownShoot()) {
 
       float bulletX = player.x + player._width / 2;
       float bulletY = player.y - player._height;
@@ -143,7 +189,7 @@ class  Game {
     }
   }
 
-  boolean CoolDownShoot() {
+  boolean coolDownShoot() {
     // Get the current time in milliseconds
     float currentTime = millis();
     if (currentTime - lastShotTime >= cooldownTime) {
@@ -160,30 +206,23 @@ class  Game {
 
 int playerX;
 
-int enemyWidth = 30;
-int enemyHeight = 20;
-int enemySpeed = 2;
+
+float enemySpeed = 0.05;
 int enemyDirection = 1; // 1 para direita, -1 para esquerda
 
 Game game;
 void setup() {
-  size(400, 400);
+  size(400, 800);
   game = new Game();
-  // Inicializa os inimigos
-  for (int i = 0; i < game.enemies.length; i++) {
-    for (int j = 0; j < game.enemies[i].length; j++) {
-      Enemy enemy = new Enemy(j * (enemyWidth + 10) + 30, i * (enemyHeight + 10) + 30, #FC0303);
-      game.enemies[i][j] = enemy;
-    }
-  }
+  game.createEnemies();
 }
 
 void draw() {
   background(0);
 
-  game.DrawEnemies();
-  game.DrawPlayer();
-  game.DrawBullets();
+  game.drawEnemies();
+  game.drawPlayer();
+  game.drawBullets();
 }
 
 
@@ -193,38 +232,6 @@ void keyPressed() {
   } else if (keyCode == RIGHT) {
     game.player.x += 10;
   } else if (key == ' ') {
-    game.Shoot();
-  }
-}
-
-void moveEnemies() {
-  boolean hitWall = false;
-  for (int i = 0; i < game.enemies.length; i++) {
-    for (int j = 0; j < game.enemies[i].length; j++) {
-      if (game.enemies[i][j].enable) {
-        if (j * (enemyWidth + 10) + 30 + enemyWidth >= width || j * (enemyWidth + 10) + 30 <= 0) {
-          hitWall = true;
-        }
-      }
-    }
-  }
-
-  if (hitWall) {
-    enemyDirection *= -1;
-    for (int i = 0; i < game.enemies.length; i++) {
-      for (int j = 0; j < game.enemies[i].length; j++) {
-        if (game.enemies[i][j].enable) {
-          game.enemies[i][j].enable = false; // Remove o inimigo
-        }
-      }
-    }
-  }
-
-  for (int i = 0; i < game.enemies.length; i++) {
-    for (int j = 0; j < game.enemies[i].length; j++) {
-      if (game.enemies[i][j].enable) {
-        game.enemies[i][j].enable = true; // Mantém o inimigo
-      }
-    }
+    game.shoot();
   }
 }

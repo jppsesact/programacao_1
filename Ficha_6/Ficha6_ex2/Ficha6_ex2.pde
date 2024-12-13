@@ -1,8 +1,10 @@
+// classe Recurso
 class Recurso {
   PVector cord;
   color cor;
 }
 
+// classe Cobra que é uma subclasse da classe Recurso 
 class Cobra extends Recurso {
 
   ArrayList<PVector> corpo;
@@ -11,19 +13,21 @@ class Cobra extends Recurso {
   PVector lastPos;
   PVector headPos;
   
+  // construtor da classe Cobra
   Cobra() {
-    this.corpo = new ArrayList<PVector>();
-
+    this.corpo = new ArrayList<PVector>();     // Cria o corpo da cobra
     this.cord = new PVector();
     this.cord.x = width/2;
     this.cord.y = height/2;
-    this.corpo.add(cord);    
-    rect(this.cord.x, this.cord.y, 20, 20);
-    direcao = new PVector(tamanho, 0);
+    this.corpo.add(cord);  // adiciona a primeira coordenada à cobra  
+    rect(this.cord.x, this.cord.y, 20, 20); // desenha o primeiro quadrado do corpo da cobra no centro do ecrã
+    direcao = new PVector(1, 0); // direcao inicial para a direita 
   }
-
-  void mudarDirecao(float x, float y) {
-    if (direcao.x != -x || direcao.y != -y)   
+  
+  // método que faz a cobra mudar de direção
+  void mudarDirecao(float x, float y) {    
+    // não deixa a cobra fazer "inversão de marcha", isto é ter como nova direção a direção oposta 
+    if (direcao.x != -x || direcao.y != -y)     
       direcao = new PVector(x, y);
   }
 
@@ -32,6 +36,7 @@ class Cobra extends Recurso {
     headPos = corpo.get(0);
     lastPos = new PVector(headPos.x, headPos.y);
     PVector newHead = new PVector(headPos.x, headPos.y);
+    
     // move para a direita
     if (direcao.x == 1) {
       newHead.x +=20;
@@ -48,18 +53,21 @@ class Cobra extends Recurso {
     } else if (direcao.y == -1) {
       newHead.y -=20;
     }
-    corpo.add(0, newHead);
-    corpo.remove(corpo.size() - 1);
-    headPos = corpo.get(0);
+    // o código anterior calcula as novas coordenadas da cabeça da cobra    
+    corpo.add(0, newHead); // adiciona uma "nova" cabeça à cobra com as novas coordenadas
+    corpo.remove(corpo.size() - 1); // remove o último quadrado da cauda
+    headPos = corpo.get(0); // guardo a nova posição da cabeça da cobra
   }
 
+  // desenha a cobra
   void desenhar() {
-    fill(this.cor);
-    for (PVector quadrado : corpo) {
-      rect(quadrado.x, quadrado.y, 20, 20);      
+    fill(this.cor); // configura a cor da cobra
+    for (PVector quadrado : corpo) { // percorre todos os quadrados que compõem a cobra
+      rect(quadrado.x, quadrado.y, 20, 20); // desenha cada um dos quadrados     
     }
   }
 
+  // calcula a direção atual da cobra
   PVector dirVelocidade() {
     
     if (direcao.x >0) { // direita
@@ -77,7 +85,7 @@ class Cobra extends Recurso {
   }
 
   void comer() {
-
+    // verfico se estou a colidir com a comida
     if (this.headPos.x >= comida.cord.x && this.headPos.x <= comida.cord.x + DimensaoQuadrado/2 &&
       (this.headPos.y >= comida.cord.y && this.headPos.y <= comida.cord.y + DimensaoQuadrado/2)) {
       
@@ -89,13 +97,16 @@ class Cobra extends Recurso {
     }
   }
 
+  // morre
   void morrer() {
-    exit();
+    noLoop();
   }
 
+  // verifica se colide com os limites da área de jogo
   void checkFronteiras() {
-    PVector cord = corpo.get(0);
-    if (cord.x+10 > width || cord.x < 10 || cord.y+10 > height || cord.y <  10)
+    PVector cord = corpo.get(0); // retorna as cordenadas da cabeça
+    // verifica se as coordenadas ultrapassaram os limites 
+    if (cord.x+10 > width || cord.x < 10 || cord.y+10 > height || cord.y <  10) 
       morrer();
   }
 }
@@ -105,14 +116,13 @@ class Comida extends Recurso {
   // Construtor é aquele que cria a comida
   Comida() {
     this.cord = new PVector();
-
-    this.cord.x = numeroAleatorio(60, width-60);
-    this.cord.x = numeroAleatorio(60, height-60);
-    this.cord.y = int(random(11)) * 20;
-    // desenhar um quadrado no sketchfab com dimensão 20x20
-    this.cor = color(random(255), random(255), random(255));
+    
+    this.cord.x = numeroAleatorio(60, width-60); //gera um nº aleatório com uma margem de 60p aos limites 
+    this.cord.y = numeroAleatorio(60, height-60);
+    //this.cord.y = int(random(11)) * 20; 
+    this.cor = color(random(255), random(255), random(255)); // gera uma cor aleatória
     fill(this.cor);
-    rect(this.cord.x, this.cord.y, 20, 20);
+    rect(this.cord.x, this.cord.y, 20, 20); // desenha a comida com uma cor
   }
 
   void desenhar() {
